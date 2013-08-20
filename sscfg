@@ -1,0 +1,94 @@
+#!/bin/bash
+
+VERSION="0.0.1"
+# Execute getopt
+ARGS=`getopt -o "hvcq" -l "help,version,create,quiet" \
+      -n "sscfg" -- "$@"`
+
+throw() {
+	echo "$@" >&2
+	exit 1
+}
+
+#Bad arguments
+if [ $? -ne 0 ];
+then
+	echo "bad options"
+	exit 1
+fi
+ 
+eval set -- "$ARGS"
+
+showHelp() {
+	cat <<EOF
+sscfg help
+EOF
+	exit
+}
+
+quiet=0
+createFile=0
+# Now go through all the options
+while true;
+do
+  case "$1" in
+    -h|--help)
+      showHelp
+      shift;;
+ 
+    -v|--version)
+      echo $VERSION
+      exit;;
+ 
+    -c|--create)
+	  createFile=1
+      shift;;
+	
+    -q|--quiet)
+	  quiet=1
+      shift;;
+	*)
+      shift
+      break;;
+  esac
+done
+
+cfgFile="$1"
+action="$2"
+key="$3"
+value="$4"
+
+# creating a blank config
+if [ "$createFile" -eq 1 ]
+then
+	# only if not exists
+	[ -f "$cfgFile" ] && throw "file $cfgFile already exists"
+
+	echo '#!/bin/bash' > "$cfgFile"
+	[ "$quiet" -eq 0 ] && echo "$cfgFile created"
+fi
+
+setVal() {
+	[ ! -z "$key" ] && { 
+		echo "$key=\"$value\"" >> $cfgFile
+		[ "$quiet" -eq 0 ] && echo "added key $key to $cfgFile"
+	}
+}
+
+unsetVal() {
+	sed -i "/^$key=/d" $cfgFile
+	[ "$quiet" -eq 0 ] && echo "removed key $key from $cfgFile"
+}
+
+# after that, our config file must exist
+[ -f "$cfgFile" ] || throw "file $cfgFile not found"
+
+case "$action" in
+	"set")
+		unsetVal
+		setVal
+	;;
+	"unset")
+		unsetVal
+	;;
+esac
