@@ -45,7 +45,7 @@ repoAction() {
 
 configVar() {
 	local sscfg="sscfg"
-	hash $sscfg 2>/dev/null || sscfg=$HERE/sscfg
+	hash $sscfg 2>/dev/null || sscfg=$HERE/sscfg/sscfg
 
 	[ -f "$CFG" ] || {
 		$sscfg -c "$CFG"

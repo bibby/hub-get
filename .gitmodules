@@ -1,0 +1,6 @@
+[submodule "json"]
+	path = json
+	url = https://github.com/bibby/JSON.sh.git
+[submodule "sscfg"]
+	path = sscfg
+	url = git@bitbucket.org:bibby/sscfg
