@@ -19,9 +19,9 @@ DEST=$hubget_dir
 mkdir -p $DEST
 
 usage() {
-	echo "github-get <action> <repo>"
+	echo "hub-get <action> <repo>"
 	echo "actions: get remove upgrade list"
-	echo "repo: username/project,  ie bibby/github-get"
+	echo "repo: username/project,  ie bibby/hub-get"
 	exit
 }
 
@@ -55,6 +55,28 @@ configVar() {
 		$sscfg -q "$CFG" set "hubget_tmp" "$hubget_tmp"
 	}
 	eval "$sscfg $CFG set $1 $2"
+}
+
+rawurlencode() {
+  local string="${1}"
+  local _outvar="${2}"
+  local strlen=${#string}
+  local encoded=""
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] )
+            o="${c}"
+        ;;
+        * )
+            printf -v o '%%%02x' "'$c"
+        ;;
+     esac
+     encoded+="${o}"
+  done
+
+  eval "$_outvar=\"${encoded}\""
 }
 
 action="$1"
@@ -99,11 +121,11 @@ case "$action" in
 		done
 	;;
 	"search")
-	# todo, real url encoding
-	terms=$( echo "$2" | tr ' ' '+')
-echo "$GH/legacy/repos/search/$terms"
-	curl \
-	-H "Authorization: token $github_oath" \
+	terms=""
+	rawurlencode "${@:2}" terms
+
+	curl -s \
+	-H "Authorization: token $github_oauth" \
 	-H "User-Agent: hub-get cli (dev/test)" \
 	"$GH/legacy/repos/search/$terms" \
 	| $HERE/json/JSON.sh \
