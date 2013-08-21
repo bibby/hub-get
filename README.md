@@ -45,27 +45,26 @@ Search for projects by keyword
 
 The output of which is similar to the following:
 
-+----------------------------------------------
-| Repo#  00047
-| Project:  optimal
-| User:  cowboyd
-| URL:  https://github.com/cowboyd/optimal
-| About:  th
-+----------------------------------------------
-| Repo#  00062
-| Project:  argparser
-| User:  shinout
-| Language:  JavaScript
-| URL:  https://github.com/shinout/argparser
-| About:  (simplest
-+----------------------------------------------
-| Repo#  00055
-| Project:  argumentum
-| User:  paulmillr
-| Language:  JavaScript
-| URL:  https://github.com/paulmillr/argumentum
-| About:  No-bullshi
-+----------------------------------------------
+    +----------------------------------------------
+    | Project:  optconfig
+    | User:  tmtm
+    | Language:  Ruby
+    | URL:  https://github.com/tmtm/optconfig
+    | About:  Command line option parser
+    +----------------------------------------------
+    | Project:  OptionParserWithFileOption
+    | User:  bianchimro
+    | Language:  Python
+    | URL:  https://github.com/bianchimro/OptionParserWithFileOption
+    | About:  An extension of python optparse.OptionParser to read options and arguments from a file
+    +----------------------------------------------
+    | Project:  scala-optparse
+    | User:  frugalmechanic
+    | Language:  Scala
+    | URL:  https://github.com/frugalmechanic/scala-optparse
+    | About:  Command line option parsing for scala
+    +----------------------------------------------
+
 
 ## install (clone)
 

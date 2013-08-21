@@ -10,7 +10,7 @@
 	value=$2
 	for(i=3; i <= NF; i++)
 		value = value FS $i
-	
+
 	where=match(value,/^"/)
 	if(where > 0)
 	{
@@ -28,8 +28,8 @@
 END{
 	for (r in repos)
 	{
-		#print "+----------------------------------------------"
-		print "| Repo# ", r;
+		# print "+----------------------------------------------"
+		# print "| Repo# ", r;
 		print "| Project: ", data[r,"name"];
 		print "| User: ", data[r,"username"];
 		if( data[r,"username"] != data[r,"owner"])
