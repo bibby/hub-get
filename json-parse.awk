@@ -8,6 +8,9 @@
 	key=substr(key, 1, len-2)
 
 	value=$2
+	for(i=3; i <= NF; i++)
+		value = value FS $i
+	
 	where=match(value,/^"/)
 	if(where > 0)
 	{
@@ -37,7 +40,11 @@ END{
 		if( data[r,"language"] )
 		print "| Language: ", data[r,"language"];
 		print "| URL: ", data[r,"url"];
-		print "| About: ", data[r,"description"];
+		if( data[r,"description"] )
+		{
+			print "| About: ", data[r,"description"];
+		}
+
 		print "+----------------------------------------------"
 	}
 }

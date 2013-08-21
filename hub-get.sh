@@ -2,8 +2,8 @@
 
 HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 
-# Configuration defaultw
-# These can be oveiden in hub-get.cfg
+# Configuration defaults
+# These can be overriden in hub-get.cfg
 github_url="https://github.com"
 hubget_tmp="/tmp/github-get"
 hubget_dir="/opt/github"
@@ -107,7 +107,7 @@ echo "$GH/legacy/repos/search/$terms"
 	-H "User-Agent: hub-get cli (dev/test)" \
 	"$GH/legacy/repos/search/$terms" \
 	| $HERE/json/JSON.sh \
-	| awk -f $HERE/hub-repo-json.awk
+	| awk -f $HERE/json-parse.awk
 	;;
 
 	"configure"|"config")
