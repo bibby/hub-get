@@ -99,11 +99,21 @@ case "$action" in
 		done
 	;;
 	"search")
-		echo $GITHUB_OAUTH
+	# todo, real url encoding
+	terms=$( echo "$2" | tr ' ' '+')
+echo "$GH/legacy/repos/search/$terms"
+	curl \
+	-H "Authorization: token $github_oath" \
+	-H "User-Agent: hub-get cli (dev/test)" \
+	"$GH/legacy/repos/search/$terms" \
+	| $HERE/json/JSON.sh \
+	| awk -f $HERE/hub-repo-json.awk
 	;;
+
 	"configure"|"config")
 		configVar "$2" "$3"
 	;;
+
 	*)
 		usage
 	;;
