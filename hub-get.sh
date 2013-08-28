@@ -121,13 +121,18 @@ case "$action" in
 		done
 	;;
 	"search")
+
+	[ -z "$github_oauth" ] && throw "OAuth token not set."
 	terms=""
 	rawurlencode "${@:2}" terms
+
+	perPage="$search_perPage"
+	[ -z "perPage" ] && perPage=25
 
 	curl -s \
 	-H "Authorization: token $github_oauth" \
 	-H "User-Agent: hub-get cli (dev/test)" \
-	"$GH/legacy/repos/search/$terms" \
+	"$GH/legacy/repos/search/$terms?per_page=$perPage" \
 	| $HERE/json/JSON.sh \
 	| awk -f $HERE/json-parse.awk
 	;;
