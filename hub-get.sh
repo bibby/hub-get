@@ -1,13 +1,19 @@
 #!/bin/bash
+#
+# hub-get
+# Something like apt-get or npm for github repos
+#
+# @author bibby <bibby@bbby.org>
+# @license MIT
 
 HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 
 # Configuration defaults
-# These can be overriden in hub-get.cfg
+# These can be overriden in ~/.hub-get.cfg
 github_url="https://github.com"
 hubget_tmp="/tmp/github-get"
-hubget_dir="/opt/github"
-[ $EUID -ne 0 ] && hubget_dir="$HOME/github"
+hubget_repo="/opt/github"
+[ $EUID -ne 0 ] && hubget_repo="$HOME/github"
 
 # Load config, if exists
 CFG="$HOME/.hub-get.cfg"
@@ -15,17 +21,21 @@ CFG="$HOME/.hub-get.cfg"
 
 GH=$github_url
 TMP=$hubget_tmp
-DEST=$hubget_dir
+DEST=$hubget_repo
 mkdir -p $DEST
 
 usage() {
-	echo "hub-get <action> <repo>"
+	cat <<EOM
+hub-get - github "package" manager
+	hub-get <action> <repo>"
 	echo "actions: get remove upgrade list"
 	echo "repo: username/project,  ie bibby/hub-get"
+EOM
 	exit
 }
 
 cleanup() {
+	# cause for concern?
 	[ -d "$TMP" ] && rm -rf "$TMP"
 }
 
@@ -36,11 +46,12 @@ throw() {
 	exit 1
 }
 
-repoAction() {
+repoSplit() {
 	repo="$1"
-	[ -z "$repo" ] && throw "repo not specified"
-	ghuser=${repo%/*}
-	ghproj=${repo#*/}
+	[ -z "$repo" ] || {
+		ghuser=${repo%/*}
+		ghproj=${repo#*/}
+	}
 }
 
 configVar() {
@@ -49,9 +60,9 @@ configVar() {
 
 	[ -f "$CFG" ] || {
 		$sscfg -c "$CFG"
-		$sscfg -q "$CFG" set "github_url" "$hubget_url"
+		$sscfg -q "$CFG" set "github_url" "$github_url"
 		$sscfg -q "$CFG" set "github_oauth" ""
-		$sscfg -q "$CFG" set "hubget_dir" "$hubget_dir"
+		$sscfg -q "$CFG" set "hubget_repo" "$hubget_repo"
 		$sscfg -q "$CFG" set "hubget_tmp" "$hubget_tmp"
 	}
 	eval "$sscfg $CFG set $1 $2"
@@ -80,9 +91,9 @@ rawurlencode() {
 }
 
 action="$1"
+repoSplit "$2"
 case "$action" in
 	"get"|"install")
-		repoAction "$2"
 		remote="$GH/$repo"
 		locally="$DEST/$repo"
 
@@ -103,18 +114,18 @@ case "$action" in
 		cleanup
 	;;
 	"upgrade"|"pull")
-		repoAction "$2"
 		destrepo="$DEST/$repo"
 		[ -d "$destrepo" ] || throw "repository $repo not found in $DEST"
 		cd $destrepo && git pull
 	;;
 	"remove"|"rm"|"del"|"delete")
-		repoAction "$2"
 		destrepo="$DEST/$repo"
 		[ -d "$destrepo" ] && rm -rf "$destrepo"
 	;;
 	"list")
-		for r in $(find "$DEST/" -type d -name .git | sort)
+		searchRoot="$DEST/$ghuser"
+		[ -d "$searchRoot" ] || throw "dir $searchRoot not found"
+		for r in $(find "$searchRoot" -type d -name .git | sort)
 		do
 				r=${r%/.git}
 				echo ${r#$DEST/}
@@ -126,28 +137,35 @@ case "$action" in
 	terms=""
 	rawurlencode "${@:2}" terms
 
+	# legacy search can't limit?
 	perPage="$search_perPage"
 	[ -z "perPage" ] && perPage=25
 
 	curl -s \
 	-H "Authorization: token $github_oauth" \
 	-H "User-Agent: hub-get cli (dev/test)" \
-	"$GH/legacy/repos/search/$terms?per_page=$perPage" \
+	"$GH/legacy/repos/search/$terms" \
 	| $HERE/json/JSON.sh \
-	| awk -f $HERE/json-parse.awk
+	| awk -f $HERE/github-json.awk
 	;;
 
 	"configure"|"config")
-		configVar "$2" "$3"
+		prop=""
+		case "$2" in
+			"github.oauth"|"github.url")
+				prop=${2/\./_}
+			;;
+
+			"tmp.dir"|"repo.dir")
+				prop="hubget_${2#.*}"
+			;;
+		esac
+
+		[ -z "$prop" ] && throw "unknown option '$2'"
+		configVar "$prop" "$3"
 	;;
 
 	*)
 		usage
 	;;
 esac
-
-repo="$2"
-[ -z "$repo" ] && usage
-
-
-

@@ -1,4 +1,5 @@
 #!/bin/bash
+# bash completion for hub-get
 
 _hubget_dirs() {
 	local _outvar _result d start
@@ -43,6 +44,9 @@ _hubget_users() {
 	eval "$1=\"$_result\""
 }
 
+_hubget_reply() {
+	COMPREPLY=($(compgen -W "$1" -- "$2"))
+}
 
 _hubget() {
 	local cur prev comps
@@ -50,25 +54,28 @@ _hubget() {
 
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	comps="install remove upgrade list search get del delete rm pull"
+	comps=""
 
 	case "$prev" in
 		'hub-get')
-			COMPREPLY=($(compgen -W "${comps}" -- "${cur}"))
+			comps="install remove upgrade list search get del delete rm pull config configure"
+			_hubget_reply "$comps" "$cur"
 			return 0
 		;;
 		remove|rm|del|delete|upgrade|pull)
-			comps=""
 			_hubget_dirs comps
-			COMPREPLY=($(compgen -W "${comps}" -- "${cur}"))
+			_hubget_reply "$comps" "$cur"
 			return 0
 		;;
 		list)
-			comps=""
 			_hubget_users comps
-			COMPREPLY=($(compgen -W "${comps}" -- "${cur}"))
+			_hubget_reply "$comps" "$cur"
 			return 0
 		;;
+		config|configure)
+			comps="github.url tmp.dir github.oauth repo.dir"
+			_hubget_reply "$comps" "$cur"
+			return 0
 	esac
 }
 
