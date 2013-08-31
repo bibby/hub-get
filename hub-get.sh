@@ -9,15 +9,19 @@
 HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 
 # Configuration defaults
-# These can be overriden in ~/.hub-get.cfg
-github_url="https://github.com"
-hubget_tmp="/tmp/github-get"
-hubget_repo="/opt/github"
-[ $EUID -ne 0 ] && hubget_repo="$HOME/github"
-
-# Load config, if exists
-CFG="$HOME/.hub-get.cfg"
+CFG="$HERE/default.cfg"
 [ -f "$CFG" ] && source "$CFG"
+
+# Load local config, if exists
+CFG="/etc/hubget/hubget.cfg"
+[ -f "$CFG" ] && source "$CFG"
+
+# Load user config, if exists
+[ $EUID -ne 0 ] && {
+	hubget_repo="$HOME/github"
+	CFG="$HOME/.hub-get.cfg"
+	[ -f "$CFG" ] && source "$CFG"
+}
 
 GH=$github_url
 TMP=$hubget_tmp
@@ -59,12 +63,9 @@ configVar() {
 	hash $sscfg 2>/dev/null || sscfg=$HERE/sscfg/sscfg
 
 	[ -f "$CFG" ] || {
-		$sscfg -c "$CFG"
-		$sscfg -q "$CFG" set "github_url" "$github_url"
-		$sscfg -q "$CFG" set "github_oauth" ""
-		$sscfg -q "$CFG" set "hubget_repo" "$hubget_repo"
-		$sscfg -q "$CFG" set "hubget_tmp" "$hubget_tmp"
+		cp "$HERE/default.cfg" "$CFG"
 	}
+
 	eval "$sscfg $CFG set $1 $2"
 }
 
@@ -157,7 +158,7 @@ case "$action" in
 			;;
 
 			"tmp.dir"|"repo.dir")
-				prop="hubget_${2#.*}"
+				prop="hubget_${2%.*}"
 			;;
 		esac
 
