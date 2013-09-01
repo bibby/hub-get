@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# @author bibby <bibby@bbby.org>
+# @license MIT
+
+VERSION="sscfg v0.0.1"
+# Execute getopt
+ARGS=`getopt -o "hvcx" -l "help,version,create,debug" \
+      -n "sscfg" -- "$@"`
+
+throw() {
+	echo "$@" >&2
+	exit 1
+}
+
+#Bad arguments
+if [ $? -ne 0 ];
+then
+	echo "bad options"
+	exit 1
+fi
+ 
+eval set -- "$ARGS"
+
+showHelp() {
+	cat <<EOF
+sscfg - shell script configuration manager
+Create and update a user config file for your shell script.
+
+use: 
+sscfg [options] cfgfile command [key] [value]
+
+commands:
+set [key] [value] - add a variable assignment to cfg file  
+unset [key] - removes variable assignment from cfg file
+print
+
+options:
+-h|--help    displays this help
+-v|--version displays sscfg version
+-c|--create  create the cfg file if it doesn't exist
+-x|--debug prints actions
+
+examples:
+Create a new config
+	sscfg --create /tmp/foo set alpha apples
+Add a variable
+	sscfg /tmp/foo set beta bananas
+Remove a variable
+	sscfg /tmp/foo unset alpha
+EOF
+	exit
+}
+
+debug=0
+createFile=0
+# Now go through all the options
+while true;
+do
+  case "$1" in
+    -h|--help)
+      showHelp
+      shift;;
+ 
+    -v|--version)
+      echo $VERSION
+      exit;;
+ 
+    -c|--create)
+	  createFile=1
+      shift;;
+	
+    -x|--debug)
+	  debug=1
+      shift;;
+	*)
+      shift
+      break;;
+  esac
+done
+
+cfgFile="$1"
+action="$2"
+key="$3"
+value="$4"
+
+msg(){
+	[ "$debug" -eq 1 ] && echo "$@"
+}
+
+# creating a blank config
+if [ "$createFile" -eq 1 ]
+then
+	# only if not exists
+	[ -f "$cfgFile" ] && throw "file $cfgFile already exists"
+
+	echo '#!/bin/bash' > "$cfgFile"
+	msg "$cfgFile created"
+fi
+
+setVal() {
+	[ ! -z "$key" ] && { 
+		echo "$key=\"$value\"" >> $cfgFile
+		msg "added key $key to $cfgFile"
+	}
+}
+
+unsetVal() {
+	[ ! -z "$key" ] && { 
+		sed -i "/^$key=/d" $cfgFile
+		msg "removed key $key from $cfgFile"
+	}
+}
+
+# after that, our config file must exist
+[ -f "$cfgFile" ] || throw "file $cfgFile not found"
+
+case "$action" in
+	"set")
+		unsetVal
+		setVal
+	;;
+	"unset")
+		unsetVal
+	;;
+	"print"|"")
+		sed '1d' "$cfgFile"
+	;;
+	"reset")
+		echo "#!/bin/bash" > $cfgFile
+	;;
+esac

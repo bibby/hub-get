@@ -1,0 +1,48 @@
+#!/bin/bash
+
+isRoot=0
+HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+
+[ "$EUID" -eq 0 ] && isRoot=1
+
+throw() {
+	echo "$@" >&2
+	exit 1
+}
+
+if [ 1 -eq "$isRoot" ]
+then
+		# root install path
+		echo "Installing as root."
+		dest="/usr/local/bin"
+		comp="/etc/bash_completion.d"
+		doComp=1
+else
+		echo "Installing as regular user. bash_completion not included (requires root)."
+		dest="$HOME/bin"
+		doComp=0
+fi
+
+[ -d "$dest" ] || throw "Paranoid bailout - $dest not found"
+# todo, offer alternate locations?
+
+destFile="$dest/sscfg"
+[ -f "$destFile" ] && throw "Paranoid bailout - $destFile already exists"
+# user may have made changes
+
+src="$HERE/sscfg"
+ln -s "$src" "$destFile" || throw "Error creating symlink as $destFile"
+echo "Symlinked $src to $destFile"
+
+[ "$doComp" -eq 1 ] && {
+		[ -d "$comp" ] || throw "Could not add completion - $comp not found"
+		compFile="$comp/sscfg"
+		[ -f "$compFile" ] && throw "Paranoid bailout - $compFile already exists"
+		src="$HERE/completion.sh"
+		cp "$src" "$compFile" || throw "Error copying $src to $compFile"
+		echo "installed $compFile"
+		. $compFile
+}
+
+echo -e "\nInstall complete!"
+$destFile -h

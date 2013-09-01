@@ -1,0 +1,45 @@
+#!/bin/bash
+
+isRoot=0
+HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+
+[ "$EUID" -eq 0 ] && isRoot=1
+
+throw() {
+	echo "$@" >&2
+	exit 1
+}
+
+if [ 1 -eq "$isRoot" ]
+then
+	comp="/etc/bash_completion.d/hubget"
+	[ -f "$comp" ] && {
+		rm "$comp"
+		echo "Removed $comp"
+	}
+
+	link="/usr/local/bin/hub-get"
+	[ -L "$link" ] && {
+		rm "$link"
+		echo "Removed $link"
+	}
+
+	cfgDir="/etc/hubget"
+	[ -d "$cfgDir" ] && {
+		rm $cfgDir/*
+		rmdir "$cfgDir"
+		echo "Removed $cfgDir/"
+	}
+else
+	link="$HOME/bin/hub-get"
+	[ -L "$link" ] && {
+		rm "$link"
+		echo "Removed $link"
+	}
+
+	cfg="$HOME/.hubget.cfg"
+	[ -f "$cfg" ] && {
+		rm "$cfg"
+		echo "Removed $cfg"
+	}
+fi
