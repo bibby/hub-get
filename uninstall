@@ -24,12 +24,22 @@ then
 		echo "Removed $link"
 	}
 
-	cfg="/etc/hubget"
-	[ -d "$cfg" ] && {
-		rm $cfg/*
-		rmdir "$cfg"
-		echo "Removed $cfg"
+	cfgDir="/etc/hubget"
+	[ -d "$cfgDir" ] && {
+		rm $cfgDir/*
+		rmdir "$cfgDir"
+		echo "Removed $cfgDir/"
 	}
 else
-	echo "todo"
+	link="$HOME/bin/hub-get"
+	[ -L "$link" ] && {
+		rm "$link"
+		echo "Removed $link"
+	}
+
+	cfg="$HOME/.hubget.cfg"
+	[ -f "$cfg" ] && {
+		rm "$cfg"
+		echo "Removed $cfg"
+	}
 fi

@@ -16,7 +16,6 @@ then
 		echo "Installing as root."
 		dest="/usr/local/bin"
 		comp="/etc/bash_completion.d"
-		doComp=1
 		cfg="/etc/hubget"
 		cfgFile="$cfg/hubget.cfg"
 else
@@ -24,7 +23,6 @@ else
 		dest="$HOME/bin"
 		cfg="$HOME"
 		cfgFile="$HOME/.hubget.cfg"
-		doComp=0
 fi
 
 [ -d "$dest" ] || throw "Paranoid bailout - $dest not found"
@@ -39,14 +37,15 @@ ln -s "$src" "$destFile" || throw "Error creating symlink as $destFile"
 echo "Symlinked $src to $destFile"
 
 mkdir -p "$cfg"
-[ -f "$cfgFile" ] && throw "Paranoid bailout - $destFile already exists"
+[ -f "$cfgFile" ] && throw "Paranoid bailout - $cfgFile already exists"
 # user may have made changes
 
 src="$HERE/default.cfg"
 cp "$src" "$cfgFile" || throw "Error copying default cfg as $cfgFile"
 echo "copied $src to $cfgFile"
 
-[ "$doComp" -eq 1 ] && {
+if [ "$isRoot" -eq 1 ]
+then
 		[ -d "$comp" ] || throw "Could not add completion - $comp not found"
 		compFile="$comp/hubget"
 		[ -f "$compFile" ] && throw "Paranoid bailout - $compFile already exists"
@@ -54,7 +53,9 @@ echo "copied $src to $cfgFile"
 		cp "$src" "$compFile" || throw "Error copying $src to $compFile"
 		echo "installed $compFile"
 		. $compFile
-}
+else
+		$destFile configure repo.dir "$HOME/github"
+fi
 
 echo -e "\nInstall complete!"
 $destFile -h

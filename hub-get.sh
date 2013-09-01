@@ -19,7 +19,7 @@ CFG="/etc/hubget/hubget.cfg"
 # Load user config, if exists
 [ $EUID -ne 0 ] && {
 	hubget_repo="$HOME/github"
-	CFG="$HOME/.hub-get.cfg"
+	CFG="$HOME/.hubget.cfg"
 	[ -f "$CFG" ] && source "$CFG"
 }
 
