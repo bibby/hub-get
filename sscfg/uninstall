@@ -1,0 +1,33 @@
+#!/bin/bash
+
+isRoot=0
+HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+
+[ "$EUID" -eq 0 ] && isRoot=1
+
+throw() {
+	echo "$@" >&2
+	exit 1
+}
+
+if [ 1 -eq "$isRoot" ]
+then
+	comp="/etc/bash_completion.d/sscfg"
+	[ -f "$comp" ] && {
+		rm "$comp"
+		echo "Removed $comp"
+	}
+
+	link="/usr/local/bin/sscfg"
+	[ -L "$link" ] && {
+		rm "$link"
+		echo "Removed $link"
+	}
+
+else
+	link="$HOME/bin/sscfg"
+	[ -L "$link" ] && {
+		rm "$link"
+		echo "Removed $link"
+	}
+fi
