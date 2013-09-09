@@ -10,17 +10,17 @@ HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 
 # Configuration defaults
 CFG="$HERE/default.cfg"
-[ -f "$CFG" ] && source "$CFG"
+[ -f "$CFG" ] && . "$CFG"
 
 # Load local config, if exists
 CFG="/etc/hubget/hubget.cfg"
-[ -f "$CFG" ] && source "$CFG"
+[ -f "$CFG" ] && . "$CFG"
 
 # Load user config, if exists
-[ $EUID -ne 0 ] && {
+[ $(id -u) -ne 0 ] && {
 	hubget_repo="$HOME/github"
 	CFG="$HOME/.hubget.cfg"
-	[ -f "$CFG" ] && source "$CFG"
+	[ -f "$CFG" ] && . "$CFG"
 }
 
 GH=$github_url
@@ -82,17 +82,25 @@ rawurlencode() {
             o="${c}"
         ;;
         * )
-            printf -v o '%%%02x' "'$c"
+			o=$(printf '%%%02x' "$c")
         ;;
      esac
-     encoded+="${o}"
+     encoded="${encoded}${o}"
   done
 
   eval "$_outvar=\"${encoded}\""
 }
 
-action="$1"
-repoSplit "$2"
+#missing action, but $1 smells of a repo; hub-get foo/bar
+if [[ -z "$2" && "$1" = */* ]] 
+then
+	action="install"
+	repoSplit "$1"
+else
+	action="$1"
+	repoSplit "$2"
+fi
+
 case "$action" in
 	"get"|"install")
 		remote="$GH/$repo"
@@ -103,7 +111,7 @@ case "$action" in
 		cd $TMP
 		git clone "$remote"
 
-		[ "$?" == "0" ] || {
+		[ "$?" = "0" ] || {
 			throw "$remote failed to clone"
 		}
 
