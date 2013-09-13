@@ -24,6 +24,7 @@ CFG="/etc/hubget/hubget.cfg"
 }
 
 GH=$github_url
+API=$github_api
 TMP=$hubget_tmp
 DEST=$hubget_repo
 mkdir -p $DEST
@@ -82,7 +83,8 @@ rawurlencode() {
             o="${c}"
         ;;
         * )
-			o=$(printf '%%%02x' "$c")
+			# I don't understand the "'" prepend hack, but it works
+			printf -v o '%%%02x' "'${c}"
         ;;
      esac
      encoded="${encoded}${o}"
@@ -148,12 +150,22 @@ case "$action" in
 
 	# legacy search can't limit?
 	perPage="$search_perPage"
-	[ -z "perPage" ] && perPage=25
+	[ -z "$perPage" ] && perPage=25
 
-	curl -s \
-	-H "Authorization: token $github_oauth" \
+	paging="&perPage=$perPage&page=1"
+	# no paging?
+	paging=""
+	requestUrl="$API/search/repositories?q=$terms&sort=stars&order=desc$paging"
+# echo $requestUrl; exit;
+
+ 	results="$TMP/search-results"
+	auth=""
+	[ -z "$github_oauth" ] || auth="-H 'Authorization: token $github_oauth'"
+
+	curl -s $auth \
 	-H "User-Agent: hub-get cli (dev/test)" \
-	"$GH/legacy/repos/search/$terms" \
+	-H "Accept: application/vnd.github.preview, application/json" \
+	"${requestUrl}" \
 	| $HERE/json/JSON.sh \
 	| awk -f $HERE/github-json.awk
 	;;

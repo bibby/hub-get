@@ -1,11 +1,25 @@
-/^\["repositories",[0-9]+,"/{
+function join(array, sep, start, end)
+{
+	if (sep == "") sep = " "
+	else if (sep == SUBSEP) # magic value
+		sep = ""
 
-	split($1,keys,/,/)
-	key=keys[3]
+	result = array[start]
+	for (i = start + 1; i <= end; i++)
+	{
+		if(array[i])
+		result = result sep array[i]
+	}
+
+	return result
+}
+/^\["items",[0-9]+,"/{
+
+	klen=split($1,keys,/,/)
 	repo="000"keys[2]
-	key=substr(key,2)
-	len=length(key)
-	key=substr(key, 1, len-2)
+
+	key = join(keys, "/", 3, klen)
+	gsub(/[\[\]\"]/, "", key)
 
 	value=$2
 	for(i=3; i <= NF; i++)
@@ -31,15 +45,11 @@ END{
 		# print "+----------------------------------------------"
 		# print "| Repo# ", r;
 		print "| Project: ", data[r,"name"];
-		print "| User: ", data[r,"username"];
-		if( data[r,"username"] != data[r,"owner"])
-		{
-			print "| Owner: ", data[r,"owner"];
-		}
+		print "| User: ", data[r,"owner/login"];
 
 		if( data[r,"language"] )
 		print "| Language: ", data[r,"language"];
-		print "| URL: ", data[r,"url"];
+		print "| URL: ", data[r,"html_url"];
 		if( data[r,"description"] )
 		{
 			print "| About: ", data[r,"description"];
