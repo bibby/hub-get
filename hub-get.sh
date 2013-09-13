@@ -134,7 +134,7 @@ case "$action" in
 	"list")
 		searchRoot="$DEST/$ghuser"
 		[ -d "$searchRoot" ] || throw "dir $searchRoot not found"
-		for r in $(find "$searchRoot" -type d -name .git | sort)
+		for r in $(find "$searchRoot" -type d -name .git | awk -F "/" -f "$HERE/listfmt.awk" | sort)
 		do
 				r=${r%/.git}
 				echo ${r#$DEST/}
