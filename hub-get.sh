@@ -6,28 +6,28 @@
 # @author bibby <bibby@bbby.org>
 # @license MIT
 
-HERE=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
+here=$(dirname $(readlink -f ${BASH_SOURCE[0]}))
 
 # Configuration defaults
-CFG="$HERE/default.cfg"
-[ -f "$CFG" ] && . "$CFG"
+cfg="$here/default.cfg"
+[ -f "$cfg" ] && . "$cfg"
 
 # Load local config, if exists
-CFG="/etc/hubget/hubget.cfg"
-[ -f "$CFG" ] && . "$CFG"
+cfg="/etc/hubget/hubget.cfg"
+[ -f "$cfg" ] && . "$cfg"
 
 # Load user config, if exists
 [ $(id -u) -ne 0 ] && {
 	hubget_repo="$HOME/github"
-	CFG="$HOME/.hubget.cfg"
-	[ -f "$CFG" ] && . "$CFG"
+	cfg="$HOME/.hubget.cfg"
+	[ -f "$cfg" ] && . "$cfg"
 }
 
-GH=$github_url
-API=$github_api
-TMP=$hubget_tmp
-DEST=$hubget_repo
-mkdir -p $DEST
+githubUrl=$github_url
+githubApi=$github_api
+appTemp=$hubget_tmp
+repoDest=$hubget_repo
+mkdir -p $repoDest
 
 usage() {
 	cat <<EOM
@@ -41,7 +41,7 @@ EOM
 
 cleanup() {
 	# cause for concern?
-	[ -d "$TMP" ] && rm -rf "$TMP"
+	[ -d "$appTemp" ] && rm -rf "$appTemp"
 }
 
 throw() {
@@ -61,13 +61,13 @@ repoSplit() {
 
 configVar() {
 	local sscfg="sscfg"
-	hash $sscfg 2>/dev/null || sscfg=$HERE/sscfg/sscfg
+	hash $sscfg 2>/dev/null || sscfg=$here/sscfg/sscfg
 
-	[ -f "$CFG" ] || {
-		cp "$HERE/default.cfg" "$CFG"
+	[ -f "$cfg" ] || {
+		cp "$here/default.cfg" "$cfg"
 	}
 
-	eval "$sscfg $CFG set $1 $2"
+	eval "$sscfg $cfg set $1 $2"
 }
 
 rawurlencode() {
@@ -105,41 +105,41 @@ fi
 
 case "$action" in
 	"get"|"install")
-		remote="$GH/$repo"
-		locally="$DEST/$repo"
+		remote="$githubUrl/$repo"
+		locally="$repoDest/$repo"
 
 		[ -d "$locally" ] && throw "$locally already exists. Did you mean 'upgrade'?"
-		mkdir -p $TMP
-		cd $TMP
+		mkdir -p $appTemp
+		cd $appTemp
 		git clone "$remote"
 
 		[ "$?" = "0" ] || {
 			throw "$remote failed to clone"
 		}
 
-		destrepo="$DEST/$ghuser"
+		destrepo="$repoDest/$ghuser"
 		mkdir -p "$destrepo"
-		mv "$TMP/$ghproj" "$destrepo"
+		mv "$appTemp/$ghproj" "$destrepo"
 
 		echo "Cloned $ghproj to $destrepo"
 		cleanup
 	;;
 	"upgrade"|"pull")
-		destrepo="$DEST/$repo"
-		[ -d "$destrepo" ] || throw "repository $repo not found in $DEST"
+		destrepo="$repoDest/$repo"
+		[ -d "$destrepo" ] || throw "repository $repo not found in $repoDest"
 		cd $destrepo && git pull
 	;;
 	"remove"|"rm"|"del"|"delete")
-		destrepo="$DEST/$repo"
+		destrepo="$repoDest/$repo"
 		[ -d "$destrepo" ] && rm -rf "$destrepo"
 	;;
 	"list")
-		searchRoot="$DEST/$ghuser"
+		searchRoot="$repoDest/$ghuser"
 		[ -d "$searchRoot" ] || throw "dir $searchRoot not found"
-		for r in $(find "$searchRoot" -type d -name .git | awk -F "/" -f "$HERE/listfmt.awk" | sort)
+		for r in $(find "$searchRoot" -type d -name .git | awk -F "/" -f "$here/listfmt.awk" | sort)
 		do
 				r=${r%/.git}
-				echo ${r#$DEST/}
+				echo ${r#$repoDest/}
 		done
 	;;
 	"search")
@@ -155,10 +155,10 @@ case "$action" in
 	paging="&perPage=$perPage&page=1"
 	# no paging?
 	paging=""
-	requestUrl="$API/search/repositories?q=$terms&sort=stars&order=desc$paging"
+	requestUrl="$githubApi/search/repositories?q=$terms&sort=stars&order=desc$paging"
 # echo $requestUrl; exit;
 
- 	results="$TMP/search-results"
+ 	results="$appTemp/search-results"
 	auth=""
 	[ -z "$github_oauth" ] || auth="-H 'Authorization: token $github_oauth'"
 
@@ -166,8 +166,8 @@ case "$action" in
 	-H "User-Agent: hub-get cli (dev/test)" \
 	-H "Accept: application/vnd.github.preview, application/json" \
 	"${requestUrl}" \
-	| $HERE/json/JSON.sh \
-	| awk -f $HERE/github-json.awk
+	| $here/json/JSON.sh \
+	| awk -f $here/github-json.awk
 	;;
 
 	"configure"|"config")
